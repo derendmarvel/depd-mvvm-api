@@ -1,41 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:ongkir_api/data/response/api_response.dart';
 import 'package:ongkir_api/model/city.dart';
+import 'package:ongkir_api/model/costresponse/costresponse.dart';
 import 'package:ongkir_api/model/model.dart';
 import 'package:ongkir_api/repository/home_respository.dart';
 
 class HomeViewmodel with ChangeNotifier {
   final _homeRepo = HomeRespository();
 
-  ApiResponse<List<Province>> provinceList = ApiResponse.loading();
+  // Origin
+  ApiResponse<List<Province>> originProvinceList = ApiResponse.loading();
+  ApiResponse<List<City>> originCityList = ApiResponse.loading();
 
-  setProvinceList(ApiResponse<List<Province>> response) {
-    provinceList = response;
+  // Destination
+  ApiResponse<List<Province>> destinationProvinceList = ApiResponse.loading();
+  ApiResponse<List<City>> destinationCityList = ApiResponse.loading();
+
+  // New property for shipping costs
+  ApiResponse<List<Costresponse>> shippingCostList = ApiResponse.loading();
+
+  // Methods for Origin
+  setOriginProvinceList(ApiResponse<List<Province>> response) {
+    originProvinceList = response;
     notifyListeners();
   }
 
-  Future<void> getProvinceList() async {
-    setProvinceList(ApiResponse.loading());
+  Future<void> getOriginProvinceList() async {
+    setOriginProvinceList(ApiResponse.loading());
     _homeRepo.fetchProvinceList().then((value) {
-      setProvinceList(ApiResponse.completed(value));
+      setOriginProvinceList(ApiResponse.completed(value));
     }).onError((error, stackTrace) {
-      setProvinceList(ApiResponse.error(error.toString()));
+      setOriginProvinceList(ApiResponse.error(error.toString()));
     });
   }
 
-  ApiResponse<List<City>> cityList = ApiResponse.loading();
-
-  setCityList(ApiResponse<List<City>> response) {
-    cityList = response;
+  setOriginCityList(ApiResponse<List<City>> response) {
+    originCityList = response;
     notifyListeners();
   }
 
-  Future<void> getCityList(var provId) async {
-    setCityList(ApiResponse.loading());
+  Future<void> getOriginCityList(var provId) async {
+    setOriginCityList(ApiResponse.loading());
     _homeRepo.fetchCityList(provId).then((value) {
-      setCityList(ApiResponse.completed(value));
+      setOriginCityList(ApiResponse.completed(value));
     }).onError((error, stackTrace) {
-      setCityList(ApiResponse.error(error.toString()));
+      setOriginCityList(ApiResponse.error(error.toString()));
     });
+  }
+
+  // Methods for Destination
+  setDestinationProvinceList(ApiResponse<List<Province>> response) {
+    destinationProvinceList = response;
+    notifyListeners();
+  }
+
+  Future<void> getDestinationProvinceList() async {
+    setDestinationProvinceList(ApiResponse.loading());
+    _homeRepo.fetchProvinceList().then((value) {
+      setDestinationProvinceList(ApiResponse.completed(value));
+    }).onError((error, stackTrace) {
+      setDestinationProvinceList(ApiResponse.error(error.toString()));
+    });
+  }
+
+  setDestinationCityList(ApiResponse<List<City>> response) {
+    destinationCityList = response;
+    notifyListeners();
+  }
+
+  Future<void> getDestinationCityList(var provId) async {
+    setDestinationCityList(ApiResponse.loading());
+    _homeRepo.fetchCityList(provId).then((value) {
+      setDestinationCityList(ApiResponse.completed(value));
+    }).onError((error, stackTrace) {
+      setDestinationCityList(ApiResponse.error(error.toString()));
+    });
+  }
+
+  calculateOngkir(){
+    
   }
 }

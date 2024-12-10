@@ -33,16 +33,17 @@ class HomeRespository {
       }
 
       List<City> selectedCities = [];
-      for(var c in result){
-        if(c.provinceId == provId){
+      for (var c in result) {
+        if (c.provinceId == provId) {
           selectedCities.add(c);
-        } 
+        }
       }
 
       return selectedCities;
-      
     } catch (e) {
       throw e;
     }
   }
+
+  
 }
