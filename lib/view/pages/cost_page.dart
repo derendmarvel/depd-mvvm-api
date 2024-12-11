@@ -33,7 +33,7 @@ class _CostPageState extends State<CostPage> {
         appBar: AppBar(
           backgroundColor: Colors.blue,
           title: Text(
-            "Hitung Ongkir",
+            "Calculate Shipping Cost",
             style: TextStyle(
                 color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
@@ -98,7 +98,7 @@ class _CostPageState extends State<CostPage> {
                                       controller: weightController,
                                       keyboardType: TextInputType.number,
                                       decoration: const InputDecoration(
-                                          labelText: 'Berat (gr)',
+                                          labelText: 'Weight (gr)',
                                           labelStyle: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.normal)),
@@ -141,7 +141,7 @@ class _CostPageState extends State<CostPage> {
                                             icon: Icon(Icons.arrow_drop_down),
                                             iconSize: 30,
                                             elevation: 2,
-                                            hint: Text('Pilih provinsi'),
+                                            hint: Text('Select province'),
                                             style:
                                                 TextStyle(color: Colors.black),
                                             items: value
@@ -171,18 +171,22 @@ class _CostPageState extends State<CostPage> {
                                   }),
                                 ),
 
-                                const SizedBox(width: 20),
+                                const SizedBox(width: 16),
 
                                 Expanded(
                                   flex: 1,
                                   child: Consumer<HomeViewmodel>(
                                       builder: (context, value, _) {
                                     switch (value.originCityList.status) {
-                                      case Status.loading:
+                                      case Status.notStarted:
                                         return Align(
                                           alignment: Alignment.topLeft,
-                                          child: Text(
-                                              "Pilih provinsi terlebih dahulu"),
+                                          child: Text("Please select a province"),
+                                        );
+                                      case Status.loading:
+                                        return Align(
+                                          alignment: Alignment.center,
+                                          child: CircularProgressIndicator(),
                                         );
                                       case Status.error:
                                         return Align(
@@ -198,7 +202,7 @@ class _CostPageState extends State<CostPage> {
                                             icon: Icon(Icons.arrow_drop_down),
                                             iconSize: 30,
                                             elevation: 2,
-                                            hint: Text('Pilih kota'),
+                                            hint: Text('Select city'),
                                             style:
                                                 TextStyle(color: Colors.black),
                                             items: value.originCityList.data!
@@ -216,8 +220,11 @@ class _CostPageState extends State<CostPage> {
                                               });
                                             });
                                       default:
+                                        return Align(
+                                          alignment: Alignment.topLeft,
+                                          child: Text("Please select a province"),
+                                        );
                                     }
-                                    return Container();
                                   }),
                                 )
                               ],
@@ -258,7 +265,7 @@ class _CostPageState extends State<CostPage> {
                                             icon: Icon(Icons.arrow_drop_down),
                                             iconSize: 30,
                                             elevation: 2,
-                                            hint: Text('Pilih provinsi'),
+                                            hint: Text('Select province'),
                                             style:
                                                 TextStyle(color: Colors.black),
                                             items: value1
@@ -298,11 +305,15 @@ class _CostPageState extends State<CostPage> {
                                   child: Consumer<HomeViewmodel>(
                                       builder: (context1, value1, _) {
                                     switch (value1.destinationCityList.status) {
-                                      case Status.loading:
+                                      case Status.notStarted:
                                         return Align(
                                           alignment: Alignment.topLeft,
-                                          child: Text(
-                                              "Pilih provinsi terlebih dahulu"),
+                                          child: Text("Please select a province"),
+                                        );
+                                      case Status.loading:
+                                        return Align(
+                                          alignment: Alignment.center,
+                                          child: CircularProgressIndicator(),
                                         );
                                       case Status.error:
                                         return Align(
@@ -318,7 +329,7 @@ class _CostPageState extends State<CostPage> {
                                             icon: Icon(Icons.arrow_drop_down),
                                             iconSize: 30,
                                             elevation: 2,
-                                            hint: Text('Pilih kota'),
+                                            hint: Text('Select city'),
                                             style:
                                                 TextStyle(color: Colors.black),
                                             items: value1
@@ -338,42 +349,160 @@ class _CostPageState extends State<CostPage> {
                                               });
                                             });
                                       default:
+                                        return Align(
+                                          alignment: Alignment.topLeft,
+                                          child: Text("Please select a province"),
+                                        );
                                     }
-                                    return Container();
                                   }),
                                 )
                               ],
                             ),
                             const SizedBox(height: 12),
+                            
                             ElevatedButton(
-                                onPressed: () {
-                                  print('Test');
-                                },
-                                child: Text('Hitung Estimasi Harga'),
-                                style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    foregroundColor: Colors.white,
-                                    elevation: 2,
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 12),
-                                    textStyle:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(6))))
+                              onPressed: () async {
+                                // Validate inputs
+                                if (selectedCityOrigin == null ||
+                                    selectedCityDestination == null ||
+                                    weightController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text("Please fill in all required fields."),
+                                    backgroundColor: Colors.red,
+                                  ));
+                                  return;
+                                }
+
+                                final originCityId = selectedCityOrigin.cityId;
+                                final destinationCityId = selectedCityDestination.cityId;
+                                final weight = int.tryParse(weightController.text) ?? 0;
+                                final courier = selectedCourier;
+
+                                // Call calculateOngkir method
+                                await homeViewmodel.calculateOngkir(
+                                  origin: originCityId,
+                                  destination: destinationCityId,
+                                  weight: weight,
+                                  courier: courier,
+                                );
+
+                                // Check for errors
+                                if (homeViewmodel.shippingCostList.status == Status.error) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text(homeViewmodel.shippingCostList.message!),
+                                    backgroundColor: Colors.red,
+                                  ));
+                                }
+                              },
+                              child: Text('Calculate estimated cost'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                textStyle: TextStyle(fontWeight: FontWeight.bold),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     )),
                 Flexible(
-                    flex: 1,
+                  flex: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
                     child: Container(
-                      color: Colors.white,
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Text("Tidak ada data."),
+                      child: Consumer<HomeViewmodel>(
+                        builder: (context, value, _) {
+                          if (value.shippingCostList.status == Status.notStarted){
+                            return Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                value.shippingCostList.status == Status.error
+                                    ? value.shippingCostList.message!
+                                    : "Please fill in all the columns.",
+                                style: TextStyle(fontSize: 16, color: Colors.grey),
+                              ),
+                            );
+                          } else if (value.shippingCostList.status == Status.loading) {
+                              return Align(
+                                alignment: Alignment.center,
+                                child: CircularProgressIndicator(),
+                              );
+                          } else if (value.shippingCostList.data != null &&
+                              value.shippingCostList.data!.isNotEmpty) {
+                            return ListView.builder(
+                              itemCount: value.shippingCostList.data!.length,
+                              itemBuilder: (context, index) {
+                                final costResponse = value.shippingCostList.data![index];
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                      child: Text(
+                                        "Courier: ${costResponse.name}",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    ...costResponse.costs!.map((cost) => Card(
+                                      elevation: 2.0,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            ListTile(
+                                              title: 
+                                                Text("${cost.description} (${cost.service})",
+                                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                              minVerticalPadding: 0,
+                                              contentPadding: EdgeInsets.all(0),
+                                              minTileHeight: 0,
+                                            ),
+                                            ...cost.cost!.map((detail) => Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text("Cost: Rp ${NumberFormat("#,##0").format(detail.value)},00"),
+                                                      Text(
+                                                        "Estimated arrival: ${detail.etd}",
+                                                        style: TextStyle(
+                                                          color: Colors.green,
+                                                          fontSize: 12
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                          ],
+                                        ),
+                                      )),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else {
+                            return Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                value.shippingCostList.status == Status.error
+                                    ? value.shippingCostList.message!
+                                    : "There is no data available.",
+                                style: TextStyle(fontSize: 16, color: Colors.grey),
+                              ),
+                            );
+                          }
+                        },
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

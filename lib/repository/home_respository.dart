@@ -1,5 +1,6 @@
 import 'package:ongkir_api/data/network/network_api_services.dart';
 import 'package:ongkir_api/model/city.dart';
+import 'package:ongkir_api/model/costresponse/costresponse.dart';
 import 'package:ongkir_api/model/model.dart';
 
 class HomeRespository {
@@ -17,7 +18,7 @@ class HomeRespository {
       }
       return result;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -41,9 +42,43 @@ class HomeRespository {
 
       return selectedCities;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
+  Future<Costresponse> fetchShippingCost({
+    required String origin,
+    required String destination,
+    required int weight,
+    required String courier,
+  }) async {
+    try {
+      dynamic response = await _apiServices.postApiResponse(
+        '/starter/cost',
+        {
+          'origin': origin,
+          'destination': destination,
+          'weight': weight,
+          'courier': courier,
+        },
+      );
 
-  
+      if (response != null && response['rajaongkir'] != null &&
+          response['rajaongkir']['status'] != null &&
+          response['rajaongkir']['status']['code'] == 200) {
+        
+        final results = response['rajaongkir']['results'];
+        if (results != null && results.isNotEmpty) {
+          // Assuming Costresponse.fromJson() expects a map, not a list element.
+          return Costresponse.fromJson(results[0]);
+        } else {
+          throw Exception("No results found in API response");
+        }
+      } else {
+        // If the response does not have a status code 200 or the structure is different
+        throw Exception("Error from API: ${response['rajaongkir']['status']['description']}");
+      }
+    } catch (e) {
+      throw Exception("Error fetching shipping costs: $e");
+    }
+  }
 }

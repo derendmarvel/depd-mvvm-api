@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-class Cost extends Equatable {
+class CostDetail extends Equatable {
   final int? value;
   final String? etd;
   final String? note;
 
-  const Cost({this.value, this.etd, this.note});
+  const CostDetail({this.value, this.etd, this.note});
 
-  factory Cost.fromJson(Map<String, dynamic> json) => Cost(
+  factory CostDetail.fromJson(Map<String, dynamic> json) => CostDetail(
         value: json['value'] as int?,
         etd: json['etd'] as String?,
         note: json['note'] as String?,

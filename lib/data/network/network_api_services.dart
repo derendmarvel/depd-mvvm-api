@@ -27,9 +27,27 @@ class NetworkApiServices implements BaseApiServices {
   }
 
   @override
-  Future postApiResponse(String url, data) {
-    // TODO: implement postApiResponse
-    throw UnimplementedError();
+  Future postApiResponse(String url, dynamic data) async {
+    dynamic responseJson;
+    try {
+      final response = await http.post(
+        Uri.https(Const.baseUrl, url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'key': Const.apiKey
+        },
+        body: jsonEncode(data),
+      );
+      responseJson = returnResponse(response);
+    } on SocketException {
+      throw NoInternetException('');
+    } on TimeoutException {
+      throw FetchDataException('Network request time out!');
+    } catch (e) {
+      throw FetchDataException('Error occurred while communicating with server');
+    }
+
+    return responseJson;
   }
 
   dynamic returnResponse(http.Response response) {

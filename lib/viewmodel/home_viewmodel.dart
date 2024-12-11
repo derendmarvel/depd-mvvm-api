@@ -10,14 +10,14 @@ class HomeViewmodel with ChangeNotifier {
 
   // Origin
   ApiResponse<List<Province>> originProvinceList = ApiResponse.loading();
-  ApiResponse<List<City>> originCityList = ApiResponse.loading();
+  ApiResponse<List<City>> originCityList = ApiResponse.notStarted();
 
   // Destination
   ApiResponse<List<Province>> destinationProvinceList = ApiResponse.loading();
-  ApiResponse<List<City>> destinationCityList = ApiResponse.loading();
+  ApiResponse<List<City>> destinationCityList = ApiResponse.notStarted();
 
   // New property for shipping costs
-  ApiResponse<List<Costresponse>> shippingCostList = ApiResponse.loading();
+  ApiResponse<List<Costresponse>> shippingCostList = ApiResponse.notStarted();
 
   // Methods for Origin
   setOriginProvinceList(ApiResponse<List<Province>> response) {
@@ -77,7 +77,31 @@ class HomeViewmodel with ChangeNotifier {
     });
   }
 
-  calculateOngkir(){
-    
+  setShippingCostList(ApiResponse<List<Costresponse>> response) {
+    shippingCostList = response;
+    notifyListeners();
   }
+
+  Future<void> calculateOngkir({
+      required String origin,
+      required String destination,
+      required int weight,
+      required String courier,
+    }) async {
+      setShippingCostList(ApiResponse.loading());
+      notifyListeners();
+      try {
+        final Costresponse costs = await _homeRepo.fetchShippingCost(
+          origin: origin,
+          destination: destination,
+          weight: weight,
+          courier: courier,
+        );
+        setShippingCostList(ApiResponse.completed([costs]));
+      } catch (e) {
+        setShippingCostList(ApiResponse.error("Error fetching shipping costs: $e"));
+      } finally {
+      notifyListeners(); // Notify the UI again for "completed" or "error" states
+      }
+    }
 }
